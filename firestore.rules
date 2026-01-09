@@ -1,0 +1,142 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // 🛡️ FUNÇÕES AUXILIARES DE ALTA PERFORMANCE
+    // ==========================================
+    
+    function isLogged() {
+      return request.auth != null;
+    }
+
+    function getMyRoles() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc.data.get('roles', [userDoc.data.get('role', 'membro')]);
+    }
+
+    function hasRole(role) {
+      let roles = getMyRoles();
+      return roles.hasAny([role, role.upper(), 'Administrador', 'Admin', 'admin']);
+    }
+
+    function isAdmin() {
+      return isLogged() && (hasRole('admin') || hasRole('administrador'));
+    }
+
+    function isLeader() {
+      return isLogged() && (
+        isAdmin() || 
+        getMyRoles().hasAny([
+          'direcao', 'direção', 'diretor', 'diretora', 'diretoria', 
+          'dirigente', 'Direção', 'Direcao', 'Diretor'
+        ])
+      );
+    }
+
+    // ==========================================
+    // 🎤 COMANDO DE LITURGIA (ADICIONADO)
+    // ==========================================
+    
+    match /setlists/{id} {
+      allow read: if isLogged();
+      // Apenas Dirigentes e Admin montam a playlist
+      allow write: if isLeader();
+    }
+
+    match /order_of_service/{id} {
+      allow read: if isLogged();
+      // Apenas quem conduz o culto pode ticar o roteiro
+      allow write: if isLeader();
+    }
+
+    match /coral_music/{id} {
+      allow read: if isLogged();
+      allow write: if isLeader() || hasRole('coral');
+    }
+
+    // ==========================================
+    // 💰 FINANCEIRO E CAIXA
+    // ==========================================
+    match /donations/{id} {
+      allow read: if isLogged() && (isAdmin() || hasRole('direcao') || hasRole('diretor'));
+      allow create: if isLogged();
+    }
+
+    match /expenses/{id} {
+      allow read, write: if isLogged() && (isAdmin() || hasRole('direcao') || hasRole('diretor'));
+    }
+
+    // ==========================================
+    // 👥 MEMBROS E ACESSOS
+    // ==========================================
+    match /membros/{id} {
+      allow read: if isLogged();
+      allow create: if isLeader() || (isLogged() && request.auth.uid == id);
+      allow update: if isLeader() || hasRole('secretaria') || (isLogged() && request.auth.uid == id);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isLogged();
+      allow write: if isAdmin() || hasRole('direcao') || (isLogged() && request.auth.uid == userId);
+    }
+
+    // ==========================================
+    // 🔔 NOTIFICAÇÕES E AVISOS
+    // ==========================================
+    match /notifications/{id} {
+      allow read, update: if isLogged() && request.auth.uid == resource.data.userId;
+      allow create: if isLogged();
+    }
+
+    match /notices/{noticeId} {
+      allow read: if isLogged();
+      allow write: if isLeader() || hasRole('comunicacao');
+      match /replies/{replyId} {
+        allow read, create: if isLogged();
+        allow delete: if isAdmin() || (isLogged() && request.auth.uid == resource.data.userId);
+      }
+    }
+
+    // ==========================================
+    // 🧱 EBD E EVENTOS
+    // ==========================================
+    match /ebd_classes/{id} {
+      allow read: if isLogged();
+      allow write: if isLeader() || hasRole('secretaria');
+    }
+
+    match /ebd_attendance/{id} {
+      allow read: if isLogged();
+      allow write: if isLeader() || hasRole('professor');
+    }
+
+    match /eventos/{id} {
+      allow read: if isLogged();
+      allow write: if isLeader() || hasRole('secretaria') || hasRole('comunicacao');
+    }
+
+    match /event_checkins/{id} {
+      allow read, create: if isLogged();
+      allow delete: if isAdmin() || (isLogged() && resource.data.memberId == request.auth.uid);
+    }
+
+    // ==========================================
+    // 📓 PRIVACIDADE E ORAÇÃO
+    // ==========================================
+    match /journal_entries/{id} {
+      allow read, write: if isLogged() && request.auth.uid == (resource == null ? request.resource.data.userId : resource.data.userId);
+    }
+
+    match /prayer_requests/{id} {
+      allow read, create, update: if isLogged();
+      allow delete: if isAdmin() || (isLogged() && resource.data.userId == request.auth.uid);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

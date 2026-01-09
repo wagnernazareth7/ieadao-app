@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "111749478898",
+    "project_id": "ieadao1210",
+    "storage_bucket": "ieadao1210.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111749478898:android:afac9c2f1783068eaed36b",
+        "android_client_info": {
+          "package_name": "com.example.ieadao"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCSEqvF4i-Ew4Y5Dq5CRWo7yB4S-3J2L0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111749478898:android:8b40dcccc7a08394aed36b",
+        "android_client_info": {
+          "package_name": "com.ieadao.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCSEqvF4i-Ew4Y5Dq5CRWo7yB4S-3J2L0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:111749478898:android:a7bf6d3ceb1c472baed36b",
+        "android_client_info": {
+          "package_name": "com.ieadao.app.ieadao"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCSEqvF4i-Ew4Y5Dq5CRWo7yB4S-3J2L0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
