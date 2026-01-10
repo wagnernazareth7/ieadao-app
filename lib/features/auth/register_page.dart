@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'services/auth_service.dart';
+import 'package:go_router/go_router.dart';
+import 'services/auth_service.dart'; // CORREÇÃO: Caminho de importação ajustado
 import '../../core/theme/app_colors.dart';
 
 class RegisterPage extends ConsumerStatefulWidget {
@@ -11,16 +12,20 @@ class RegisterPage extends ConsumerStatefulWidget {
 }
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
   final _birthDateCtrl = TextEditingController();
-  
+
   String _gender = 'Masculino';
   bool _loading = false;
 
   @override
   void dispose() {
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
     _confirmPassCtrl.dispose();
@@ -43,6 +48,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   Future<void> _register() async {
+    if (_firstNameCtrl.text.isEmpty || _lastNameCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Por favor, preencha seu nome completo')));
+      return;
+    }
     if (_passCtrl.text != _confirmPassCtrl.text) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('As senhas não coincidem')));
       return;
@@ -54,12 +63,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
     setState(() => _loading = true);
     try {
+      // CORREÇÃO SÉNIOR: Injeção de parâmetros sincronizada com o AuthService
       await AuthService().register(
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text.trim(),
+        firstName: _firstNameCtrl.text.trim(),
+        lastName: _lastNameCtrl.text.trim(),
         gender: _gender,
         birthDate: _birthDateCtrl.text.trim(),
       );
+
+      if (mounted) {
+        context.go('/');
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
@@ -79,14 +95,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           children: [
             const Text('Faça parte da nossa comunidade', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 32),
+
+            Row(
+              children: [
+                Expanded(child: TextField(controller: _firstNameCtrl, decoration: const InputDecoration(labelText: 'Nome', border: OutlineInputBorder()))),
+                const SizedBox(width: 12),
+                Expanded(child: TextField(controller: _lastNameCtrl, decoration: const InputDecoration(labelText: 'Apelido', border: OutlineInputBorder()))),
+              ],
+            ),
+            const SizedBox(height: 16),
+
             TextField(controller: _emailCtrl, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
             const SizedBox(height: 16),
             TextField(controller: _passCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Senha', border: OutlineInputBorder())),
             const SizedBox(height: 16),
             TextField(controller: _confirmPassCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Confirmar Senha', border: OutlineInputBorder())),
             const SizedBox(height: 16),
-            
-            // Novos campos para Grupos Homogéneos
+
             Row(
               children: [
                 Expanded(
@@ -108,7 +133,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -116,7 +141,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               child: ElevatedButton(
                 onPressed: _loading ? null : _register,
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-                child: _loading ? const CircularProgressIndicator(color: Colors.white) : const Text('FINALIZAR CADASTRO', style: TextStyle(color: Colors.white)),
+                child: _loading ? const CircularProgressIndicator(color: Colors.white) : const Text('FINALIZAR CADASTRO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

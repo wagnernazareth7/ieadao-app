@@ -7,29 +7,26 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// Stream de autenticação (Firebase User)
   Stream<User?> authStateChanges() => _auth.authStateChanges();
 
-  /// Retorna o utilizador atual do Firestore com suporte a Multi-Cargos
   Future<AppUser?> getCurrentUser() async {
     final firebaseUser = _auth.currentUser;
     if (firebaseUser == null) return null;
-
     final userDoc = await _db.collection('users').doc(firebaseUser.uid).get();
     if (!userDoc.exists) return null;
-
     return AppUser.fromMap(userDoc.id, userDoc.data()!);
   }
 
-  /// Registro Seguro: Cria Auth + Perfil User + Ficha Membro
+  /// Registro Evoluído: Captura Nome e Apelido reais
   Future<void> register({
     required String email,
     required String password,
+    required String firstName,
+    required String lastName,
     required String gender,
     required String birthDate,
   }) async {
     try {
-      // 1. Criar credencial no Firebase Auth
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -37,29 +34,29 @@ class AuthService {
 
       final uid = credential.user!.uid;
 
-      // 2. Gravar Perfil em 'users' (Estrutura Multi-Cargo)
-      final newUser = AppUser(
-        uid: uid,
-        email: email,
-        roles: [AppRoles.member], // Começa como lista ['membro']
-        active: true,
-        gender: gender,
-        birthDate: birthDate,
-        createdAt: DateTime.now(),
-      );
+      // 1. Gravar Perfil em 'users'
+      await _db.collection('users').doc(uid).set({
+        'uid': uid,
+        'email': email,
+        'firstName': firstName,
+        'lastName': lastName,
+        'roles': [AppRoles.member],
+        'active': true,
+        'gender': gender,
+        'birthDate': birthDate,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-      await _db.collection('users').doc(uid).set(newUser.toMap());
-
-      // 3. Gravar Ficha em 'membros' (Administrativo)
+      // 2. Gravar Ficha em 'membros' (Sincronizado)
       await _db.collection('membros').doc(uid).set({
-        'firstName': email.split('@')[0],
-        'lastName': 'Novo Cadastro',
+        'firstName': firstName,
+        'lastName': lastName,
         'email': email,
         'phone': '',
         'gender': gender,
         'birthDate': birthDate,
-        'roles': [AppRoles.member], // Sincronizado como lista
-        'role': AppRoles.member,    // Mantido para regras legadas
+        'roles': [AppRoles.member],
+        'role': AppRoles.member,
         'active': true,
         'updatedAt': FieldValue.serverTimestamp(),
       });

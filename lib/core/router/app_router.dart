@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ieadao/core/auth/auth_gate.dart';
+import 'package:ieadao/features/auth/register/register_page.dart'; // NOVO IMPORT
 import 'package:ieadao/features/membros/pages/membros_list_page.dart';
 import 'package:ieadao/features/membros/pages/membro_form_page.dart';
 import 'package:ieadao/features/membros/pages/membro_detalhes_page.dart';
@@ -36,6 +37,9 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/', builder: (context, state) => const AuthGate()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
     
+    // --- AUTENTICAÇÃO ---
+    GoRoute(path: '/register', builder: (context, state) => const RegisterPage()), // ROTA ADICIONADA
+
     // --- ROTAS DA COMUNIDADE (MEMBROS) ---
     GoRoute(path: '/ebd', builder: (context, state) => const EbdClassListPage()),
     GoRoute(path: '/oracao', builder: (context, state) => const PrayerPage()),
@@ -46,18 +50,17 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/donations', builder: (context, state) => const DonationPage()),
     GoRoute(path: '/biblioteca', builder: (context, state) => const LibraryPage()),
 
-    // --- ROTAS ADMINISTRATIVAS (DIREÇÃO / ADMIN) ---
+    // --- ROTAS ADMINISTRATIVAS ---
     GoRoute(path: '/membros', builder: (context, state) => const MembrosListPage()),
     GoRoute(path: '/membros/novo', builder: (context, state) => const MembroFormPage()),
     GoRoute(path: '/membros/:id', builder: (context, state) => MembroDetalhesPage(membroId: state.pathParameters['id']!)),
     GoRoute(path: '/membros/:id/edit', builder: (context, state) => MembroFormPage(membro: state.extra as dynamic)),
-    
     GoRoute(path: '/donations-admin', builder: (context, state) => const DonationsAdminDashboardPage()),
     GoRoute(path: '/discipulado', builder: (context, state) => const SpiritualFamilyAdminPage()),
     GoRoute(path: '/audit', builder: (context, state) => const AuditLogsPage()),
     GoRoute(path: '/reports', builder: (context, state) => const ReportsDashboardPage()),
     GoRoute(path: '/inventario', builder: (context, state) => const InventoryPage()),
-    GoRoute(path: '/biblioteca-admin', builder: (context, state) => const LibraryPage()), // Gestão de biblioteca
+    GoRoute(path: '/biblioteca-admin', builder: (context, state) => const LibraryPage()),
     
     // --- AGENDA E ESCALAS ---
     GoRoute(path: '/agenda', builder: (context, state) => const EventoListPage()),
@@ -72,7 +75,7 @@ final GoRouter router = GoRouter(
     
     // --- LITURGIA E LOUVOR ---
     GoRoute(path: '/setlists/editor', builder: (context, state) => const SetlistEditorPage()),
-    GoRoute(path: '/setlists/editor/:id', builder: (context, state) => SetlistEditorPage(setlistId: state.pathParameters['id']!),),
+    GoRoute(path: '/setlists/editor/:id', builder: (context, state) => SetlistEditorPage(setlistId: state.pathParameters['id']!)),
     GoRoute(
       path: '/chat/:channel/:title',
       builder: (context, state) => ChatPage(

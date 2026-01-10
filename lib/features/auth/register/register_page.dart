@@ -14,6 +14,8 @@ class RegisterPage extends ConsumerStatefulWidget {
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _birthCtrl = TextEditingController();
@@ -32,6 +34,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       await authService.register(
         email: _emailCtrl.text.trim(),
         password: _passCtrl.text.trim(),
+        firstName: _firstNameCtrl.text.trim(),
+        lastName: _lastNameCtrl.text.trim(),
         gender: _gender,
         birthDate: _birthCtrl.text.trim(),
       );
@@ -40,16 +44,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cadastro realizado com sucesso!'), backgroundColor: Colors.green)
         );
-        context.go('/'); // Volta para o AuthGate
+        context.go('/'); 
       }
     } catch (e) {
       if (mounted) {
-        String errorMsg = 'Erro ao realizar cadastro.';
-        if (e.toString().contains('email-already-in-use')) errorMsg = 'Este e-mail já está em uso.';
-        if (e.toString().contains('weak-password')) errorMsg = 'A senha é muito fraca.';
-        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMsg), backgroundColor: Colors.redAccent)
+          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.redAccent)
         );
       }
     } finally {
@@ -73,18 +73,40 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               const SizedBox(height: 8),
               const Text('Junte-se à família IEADAO Tsalala.', style: TextStyle(color: Colors.grey)),
               
-              const SizedBox(height: 40),
+              const SizedBox(height: 32),
+
+              // NOME PRÓPRIO E APELIDO
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _firstNameCtrl,
+                      decoration: const InputDecoration(labelText: 'Nome', prefixIcon: Icon(Icons.person_outline), border: OutlineInputBorder()),
+                      validator: (v) => v!.isEmpty ? 'Obrigatório' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _lastNameCtrl,
+                      decoration: const InputDecoration(labelText: 'Apelido', border: OutlineInputBorder()),
+                      validator: (v) => v!.isEmpty ? 'Obrigatório' : null,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
 
               // E-MAIL
               TextFormField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'E-mail Ministerial', prefixIcon: Icon(Icons.email_outlined), border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'E-mail', prefixIcon: Icon(Icons.email_outlined), border: OutlineInputBorder()),
                 validator: (v) => v!.contains('@') ? null : 'E-mail inválido',
               ),
               const SizedBox(height: 20),
 
-              // PALAVRA-PASSE
+              // PASSWORD
               TextFormField(
                 controller: _passCtrl,
                 obscureText: _obscurePass,
@@ -107,7 +129,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               ),
               const SizedBox(height: 20),
 
-              // DATA DE NASCIMENTO
+              // NASCIMENTO
               TextFormField(
                 controller: _birthCtrl,
                 readOnly: true,
@@ -132,6 +154,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     : const Text('FINALIZAR CADASTRO', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
