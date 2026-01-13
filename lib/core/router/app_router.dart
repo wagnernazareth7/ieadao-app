@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ieadao/core/auth/auth_gate.dart';
-import 'package:ieadao/features/auth/register/register_page.dart'; // NOVO IMPORT
+import 'package:ieadao/features/auth/register/register_page.dart';
 import 'package:ieadao/features/membros/pages/membros_list_page.dart';
 import 'package:ieadao/features/membros/pages/membro_form_page.dart';
 import 'package:ieadao/features/membros/pages/membro_detalhes_page.dart';
@@ -36,21 +36,22 @@ final GoRouter router = GoRouter(
   routes: <RouteBase>[
     GoRoute(path: '/', builder: (context, state) => const AuthGate()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
-    
-    // --- AUTENTICAÇÃO ---
-    GoRoute(path: '/register', builder: (context, state) => const RegisterPage()), // ROTA ADICIONADA
+    GoRoute(path: '/register', builder: (context, state) => const RegisterPage()),
 
-    // --- ROTAS DA COMUNIDADE (MEMBROS) ---
+    // --- COMUNIDADE ---
     GoRoute(path: '/ebd', builder: (context, state) => const EbdClassListPage()),
     GoRoute(path: '/oracao', builder: (context, state) => const PrayerPage()),
+    GoRoute(path: '/prayer', builder: (context, state) => const PrayerPage()),
     GoRoute(path: '/diario', builder: (context, state) => const JournalPage()),
+    GoRoute(path: '/journal', builder: (context, state) => const JournalPage()),
     GoRoute(path: '/bible', builder: (context, state) => const BiblePage()),
     GoRoute(path: '/ia-assistant', builder: (context, state) => const AiChatPage()),
     GoRoute(path: '/comunicados', builder: (context, state) => const NoticesPage()),
     GoRoute(path: '/donations', builder: (context, state) => const DonationPage()),
     GoRoute(path: '/biblioteca', builder: (context, state) => const LibraryPage()),
 
-    // --- ROTAS ADMINISTRATIVAS ---
+    // --- GESTÃO E ADMIN (CORREÇÃO DE ROTAS DE COMUNICADOS) ---
+    GoRoute(path: '/comunicados-admin', builder: (context, state) => const NoticesPage()), // ROTA ADICIONADA
     GoRoute(path: '/membros', builder: (context, state) => const MembrosListPage()),
     GoRoute(path: '/membros/novo', builder: (context, state) => const MembroFormPage()),
     GoRoute(path: '/membros/:id', builder: (context, state) => MembroDetalhesPage(membroId: state.pathParameters['id']!)),

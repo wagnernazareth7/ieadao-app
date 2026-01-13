@@ -36,18 +36,30 @@ service cloud.firestore {
     }
 
     // ==========================================
-    // 🎤 COMANDO DE LITURGIA (ADICIONADO)
+    // 📢 COMUNICADOS E AVISOS (RESTRITO: ADMIN E COMUNICAÇÃO)
     // ==========================================
-    
+    match /notices/{noticeId} {
+      allow read: if isLogged();
+      
+      // REGRA SÉNIOR: Apenas Admin Supremo e Equipa de Comunicação publicam
+      allow write: if isAdmin() || hasRole('comunicacao');
+      
+      match /replies/{replyId} {
+        allow read, create: if isLogged();
+        allow delete: if isAdmin() || (isLogged() && request.auth.uid == resource.data.userId);
+      }
+    }
+
+    // ==========================================
+    // 🎤 COMANDO DE LITURGIA
+    // ==========================================
     match /setlists/{id} {
       allow read: if isLogged();
-      // Apenas Dirigentes e Admin montam a playlist
       allow write: if isLeader();
     }
 
     match /order_of_service/{id} {
       allow read: if isLogged();
-      // Apenas quem conduz o culto pode ticar o roteiro
       allow write: if isLeader();
     }
 
@@ -84,23 +96,6 @@ service cloud.firestore {
     }
 
     // ==========================================
-    // 🔔 NOTIFICAÇÕES E AVISOS
-    // ==========================================
-    match /notifications/{id} {
-      allow read, update: if isLogged() && request.auth.uid == resource.data.userId;
-      allow create: if isLogged();
-    }
-
-    match /notices/{noticeId} {
-      allow read: if isLogged();
-      allow write: if isLeader() || hasRole('comunicacao');
-      match /replies/{replyId} {
-        allow read, create: if isLogged();
-        allow delete: if isAdmin() || (isLogged() && request.auth.uid == resource.data.userId);
-      }
-    }
-
-    // ==========================================
     // 🧱 EBD E EVENTOS
     // ==========================================
     match /ebd_classes/{id} {
@@ -119,13 +114,19 @@ service cloud.firestore {
     }
 
     match /event_checkins/{id} {
-      allow read, create: if isLogged();
+      allow read: if isLogged();
+      allow create: if isLogged();
       allow delete: if isAdmin() || (isLogged() && resource.data.memberId == request.auth.uid);
     }
 
     // ==========================================
     // 📓 PRIVACIDADE E ORAÇÃO
     // ==========================================
+    match /notifications/{id} {
+      allow read, update: if isLogged() && request.auth.uid == resource.data.userId;
+      allow create: if isLogged();
+    }
+
     match /journal_entries/{id} {
       allow read, write: if isLogged() && request.auth.uid == (resource == null ? request.resource.data.userId : resource.data.userId);
     }
