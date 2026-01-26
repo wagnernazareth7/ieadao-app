@@ -14,6 +14,7 @@ import 'package:ieadao/features/evento/evento_form_page.dart';
 import 'package:ieadao/features/ebd/pages/ebd_admin_dashboard_page.dart';
 import 'package:ieadao/features/ebd/pages/ebd_class_detail_page.dart';
 import 'package:ieadao/features/ebd/pages/ebd_class_list_page.dart';
+import 'package:ieadao/features/ebd/pages/ebd_attendance_page.dart'; // NOVO IMPORT
 import 'package:ieadao/features/ebd/pages/ebd_form_page.dart';
 import 'package:ieadao/features/escalas/pages/escala_admin_page.dart';
 import 'package:ieadao/features/louvor/pages/setlist_editor_page.dart';
@@ -50,8 +51,8 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/donations', builder: (context, state) => const DonationPage()),
     GoRoute(path: '/biblioteca', builder: (context, state) => const LibraryPage()),
 
-    // --- GESTÃO E ADMIN (CORREÇÃO DE ROTAS DE COMUNICADOS) ---
-    GoRoute(path: '/comunicados-admin', builder: (context, state) => const NoticesPage()), // ROTA ADICIONADA
+    // --- GESTÃO E ADMIN ---
+    GoRoute(path: '/comunicados-admin', builder: (context, state) => const NoticesPage()),
     GoRoute(path: '/membros', builder: (context, state) => const MembrosListPage()),
     GoRoute(path: '/membros/novo', builder: (context, state) => const MembroFormPage()),
     GoRoute(path: '/membros/:id', builder: (context, state) => MembroDetalhesPage(membroId: state.pathParameters['id']!)),
@@ -71,6 +72,15 @@ final GoRouter router = GoRouter(
 
     // --- EBD GESTÃO ---
     GoRoute(path: '/ebd-admin', builder: (context, state) => const EbdAdminDashboardPage()),
+    GoRoute(
+      path: '/ebd/classes/:id', 
+      builder: (context, state) => EbdClassDetailPage(classId: state.pathParameters['id']!),
+    ),
+    // ROTA DA CHAMADA (CORREÇÃO DA IMAGEM)
+    GoRoute(
+      path: '/ebd/classes/:id/attendance', 
+      builder: (context, state) => EbdAttendancePage(classId: state.pathParameters['id']!),
+    ),
     GoRoute(path: '/ebd/novo', builder: (context, state) => const EbdFormPage()),
     GoRoute(path: '/ebd/edit', builder: (context, state) => EbdFormPage(turma: state.extra as dynamic)),
     

@@ -36,18 +36,26 @@ service cloud.firestore {
     }
 
     // ==========================================
-    // 📢 COMUNICADOS E AVISOS (RESTRITO: ADMIN E COMUNICAÇÃO)
+    // 📜 AUDITORIA (CORREÇÃO DO ERRO DE SALVAMENTO)
     // ==========================================
-    match /notices/{noticeId} {
+    match /audit_logs/{logId} {
+      allow create: if isLogged(); // Permite registrar a ação
+      allow read, delete: if isAdmin(); // Apenas Admin audita
+      allow update: if false;
+    }
+
+    // ==========================================
+    // 🧱 EBD (ESCOLA DOMINICAL)
+    // ==========================================
+    match /ebd_classes/{id} {
       allow read: if isLogged();
-      
-      // REGRA SÉNIOR: Apenas Admin Supremo e Equipa de Comunicação publicam
-      allow write: if isAdmin() || hasRole('comunicacao');
-      
-      match /replies/{replyId} {
-        allow read, create: if isLogged();
-        allow delete: if isAdmin() || (isLogged() && request.auth.uid == resource.data.userId);
-      }
+      allow write: if isLeader() || hasRole('secretaria');
+    }
+
+    match /ebd_attendance/{id} {
+      allow read: if isLogged();
+      // Professores agora têm permissão total de escrita para a chamada
+      allow write: if isLeader() || hasRole('professor');
     }
 
     // ==========================================
@@ -61,11 +69,6 @@ service cloud.firestore {
     match /order_of_service/{id} {
       allow read: if isLogged();
       allow write: if isLeader();
-    }
-
-    match /coral_music/{id} {
-      allow read: if isLogged();
-      allow write: if isLeader() || hasRole('coral');
     }
 
     // ==========================================
@@ -96,35 +99,25 @@ service cloud.firestore {
     }
 
     // ==========================================
-    // 🧱 EBD E EVENTOS
+    // 📓 OUTRAS REGRAS
     // ==========================================
-    match /ebd_classes/{id} {
-      allow read: if isLogged();
-      allow write: if isLeader() || hasRole('secretaria');
+    match /notifications/{id} {
+      allow read, update: if isLogged() && request.auth.uid == resource.data.userId;
+      allow create: if isLogged();
     }
 
-    match /ebd_attendance/{id} {
+    match /notices/{noticeId} {
       allow read: if isLogged();
-      allow write: if isLeader() || hasRole('professor');
+      allow write: if isAdmin() || hasRole('comunicacao');
+      match /replies/{replyId} {
+        allow read, create: if isLogged();
+        allow delete: if isAdmin() || (isLogged() && request.auth.uid == resource.data.userId);
+      }
     }
 
     match /eventos/{id} {
       allow read: if isLogged();
       allow write: if isLeader() || hasRole('secretaria') || hasRole('comunicacao');
-    }
-
-    match /event_checkins/{id} {
-      allow read: if isLogged();
-      allow create: if isLogged();
-      allow delete: if isAdmin() || (isLogged() && resource.data.memberId == request.auth.uid);
-    }
-
-    // ==========================================
-    // 📓 PRIVACIDADE E ORAÇÃO
-    // ==========================================
-    match /notifications/{id} {
-      allow read, update: if isLogged() && request.auth.uid == resource.data.userId;
-      allow create: if isLogged();
     }
 
     match /journal_entries/{id} {
