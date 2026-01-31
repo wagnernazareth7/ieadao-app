@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../coral/services/coral_service.dart';
+import '../highlights/services/live_stream_service.dart'; 
 import '../../../core/models/music_model.dart';
 
 class DiretoriaDashboard extends ConsumerWidget {
@@ -17,9 +18,12 @@ class DiretoriaDashboard extends ConsumerWidget {
 
     final bool canAdmin = normalizedRoles.contains('admin');
     final bool isDirector = normalizedRoles.contains('direcao') || normalizedRoles.contains('diretor') || normalizedRoles.contains('diretora');
+    final bool isComs = normalizedRoles.contains('comunicacao') || normalizedRoles.contains('media');
+    
+    // PERMISSÕES DE ELITE SÉNIOR
     final bool canManage = canAdmin || isDirector || normalizedRoles.contains('secretaria');
     final bool canLiturgia = canAdmin || normalizedRoles.contains('dirigente') || normalizedRoles.contains('dirigentes');
-    final bool canMedia = canAdmin || isDirector || normalizedRoles.contains('comunicacao') || normalizedRoles.contains('media');
+    final bool canMedia = canAdmin || isDirector || isComs;
     final bool canEbd = canAdmin || isDirector || normalizedRoles.contains('professor');
 
     return Scaffold(
@@ -48,7 +52,7 @@ class DiretoriaDashboard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- ÁREA 1: LITURGIA (DIRIGENTES) ---
+                  // --- ÁREA 1: LITURGIA ---
                   if (canLiturgia) ...[
                     _buildSectionHeader('LITURGIA E ADORAÇÃO', Icons.auto_fix_high, Colors.orange),
                     const SizedBox(height: 16),
@@ -70,12 +74,16 @@ class DiretoriaDashboard extends ConsumerWidget {
                   ],
 
                   // --- ÁREA 2: GESTÃO ESTRATÉGICA ---
-                  if (canManage) ...[
+                  if (canManage || canMedia) ...[
                     _buildSectionHeader('GESTÃO ESTRATÉGICA', Icons.admin_panel_settings, Colors.indigo),
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20)]),
+                      decoration: BoxDecoration(
+                        color: Colors.white, 
+                        borderRadius: BorderRadius.circular(24), 
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20)]
+                      ),
                       child: GridView.count(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -84,12 +92,16 @@ class DiretoriaDashboard extends ConsumerWidget {
                         crossAxisSpacing: 4,
                         childAspectRatio: 0.75,
                         children: [
-                          _IconBtn(label: 'Membros', icon: Icons.people_alt, color: Colors.blue, onTap: () => context.push('/membros')),
-                          _IconBtn(label: 'Finanças', icon: Icons.account_balance_wallet, color: Colors.teal, onTap: () => context.push('/donations-admin')),
+                          if (canManage) _IconBtn(label: 'Membros', icon: Icons.people_alt, color: Colors.blue, onTap: () => context.push('/membros')),
+                          if (canManage) _IconBtn(label: 'Finanças', icon: Icons.account_balance_wallet, color: Colors.teal, onTap: () => context.push('/donations-admin')),
+                          
+                          // COMUNICAÇÃO TEM ACESSO À AGENDA
                           _IconBtn(label: 'Agenda', icon: Icons.calendar_month, color: Colors.orange, onTap: () => context.push('/agenda')),
-                          _IconBtn(label: 'Família Fé', icon: Icons.favorite, color: Colors.pink, onTap: () => context.push('/discipulado')),
-                          if (canAdmin || isDirector) _IconBtn(label: 'Biblioteca', icon: Icons.book, color: Colors.brown, onTap: () => context.push('/biblioteca-admin')),
-                          if (canAdmin || isDirector) _IconBtn(label: 'Património', icon: Icons.inventory_2, color: Colors.blueGrey, onTap: () => context.push('/inventario')),
+                          
+                          if (canManage) _IconBtn(label: 'Família Fé', icon: Icons.favorite, color: Colors.pink, onTap: () => context.push('/discipulado')),
+                          if (canManage) _IconBtn(label: 'Escalas', icon: Icons.event_note, color: Colors.indigo, onTap: () => context.push('/escala-admin')),
+                          if (canManage) _IconBtn(label: 'Património', icon: Icons.inventory_2, color: Colors.blueGrey, onTap: () => context.push('/inventario')),
+                          
                           if (canAdmin || isDirector) _IconBtn(label: 'Relatórios', icon: Icons.bar_chart, color: Colors.deepPurple, onTap: () => context.push('/reports')),
                           if (canAdmin) _IconBtn(label: 'Auditoria', icon: Icons.security, color: Colors.red, onTap: () => context.push('/audit')),
                         ],
@@ -104,9 +116,34 @@ class DiretoriaDashboard extends ConsumerWidget {
                     const SizedBox(height: 16),
                     Column(
                       children: [
-                        if (canEbd) _CompactTool(label: 'Gestão da EBD', icon: Icons.menu_book, color: Colors.green, onTap: () => context.push('/ebd-admin')),
-                        const SizedBox(height: 12),
-                        if (canMedia) _CompactTool(label: 'Comunicados Oficiais', icon: Icons.campaign, color: Colors.orange, onTap: () => context.push('/comunicados-admin')),
+                        if (canMedia) ...[
+                          _CompactTool(
+                            label: 'Transmitir Culto Online', 
+                            icon: Icons.live_tv, 
+                            color: Colors.redAccent, 
+                            onTap: () => _showLiveStreamDialog(context)
+                          ),
+                          const SizedBox(height: 12),
+                          _CompactTool(
+                            label: 'Gerir Mural do Culto', 
+                            icon: Icons.camera_roll_rounded, 
+                            color: Colors.blue, 
+                            onTap: () => context.push('/mural/novo')
+                          ),
+                          const SizedBox(height: 12),
+                          _CompactTool(
+                            label: 'Comunicados Oficiais', 
+                            icon: Icons.campaign, 
+                            color: Colors.orange, 
+                            onTap: () => context.push('/comunicados-admin')
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (canEbd) ...[
+                          _CompactTool(label: 'Gestão da EBD', icon: Icons.menu_book, color: Colors.green, onTap: () => context.push('/ebd-admin')),
+                          const SizedBox(height: 12),
+                        ],
+                        _CompactTool(label: 'Biblioteca da Igreja', icon: Icons.book, color: Colors.brown, onTap: () => context.push('/biblioteca-admin')),
                       ],
                     ),
                   ],
@@ -121,38 +158,95 @@ class DiretoriaDashboard extends ConsumerWidget {
     );
   }
 
+  void _showLiveStreamDialog(BuildContext context) {
+    final service = LiveStreamService();
+    final urlCtrl = TextEditingController();
+    final titleCtrl = TextEditingController(text: 'Culto de Adoração - IEADAO Tsalala');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Transmitir Culto Online', style: AppTextStyles.heading),
+            const SizedBox(height: 8),
+            const Text('Insira o link do YouTube para iniciar.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 24),
+            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Título da Transmissão', border: OutlineInputBorder())),
+            const SizedBox(height: 16),
+            TextField(controller: urlCtrl, decoration: const InputDecoration(labelText: 'Link da Live (URL)', hintText: 'https://youtube.com/live/...', border: OutlineInputBorder())),
+            const SizedBox(height: 32),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      await service.stopLive();
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                    style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('PARAR LIVE'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (urlCtrl.text.isEmpty) return;
+                      await service.setLiveConfig(
+                        status: true, 
+                        url: urlCtrl.text.trim(), 
+                        title: titleCtrl.text.trim()
+                      );
+                      if (context.mounted) Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text('INICIAR AGORA', style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(String title, IconData icon, Color color) {
-    return Row(children: [Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 14, color: color)), const SizedBox(width: 10), Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.blueGrey.shade700, letterSpacing: 1.5))]);
+    return Row(children: [Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 14, color: color)), const SizedBox(width: 10), Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.blueGrey.shade700, letterSpacing: 1.5))]);
   }
 
   void _showAddMusic(BuildContext context, CoralService service) {
     final titleCtrl = TextEditingController();
     final lyricsCtrl = TextEditingController();
     final chordsCtrl = TextEditingController();
-    showModalBottomSheet(context: context, isScrollControlled: true, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))), builder: (context) => Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24), child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Cântico de Louvor', style: AppTextStyles.heading), const SizedBox(height: 20), TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Título da Música', border: OutlineInputBorder())), const SizedBox(height: 12), TextField(controller: lyricsCtrl, maxLines: 5, decoration: const InputDecoration(labelText: 'Letra da Canção', border: OutlineInputBorder())), const SizedBox(height: 12), TextField(controller: chordsCtrl, maxLines: 5, decoration: const InputDecoration(labelText: 'Cifras / Acordes (Opcional)', border: OutlineInputBorder(), hintText: 'G  C  D...')), const SizedBox(height: 24), SizedBox(width: double.infinity, height: 50, child: ElevatedButton(onPressed: () async { if (titleCtrl.text.isEmpty) return; await service.addMusic(Music(id: '', title: titleCtrl.text.trim(), composer: 'IEADAO Tsalala', lyrics: lyricsCtrl.text.trim(), chords: chordsCtrl.text.trim(), createdAt: DateTime.now())); Navigator.pop(context); }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('ADICIONAR À LISTA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))), const SizedBox(height: 24)]))));
+    showModalBottomSheet(context: context, isScrollControlled: true, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))), builder: (context) => Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24), child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [const Text('Cântico de Louvor', style: AppTextStyles.heading), const SizedBox(height: 20), TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Título da Música', border: OutlineInputBorder())), const SizedBox(height: 12), TextField(controller: lyricsCtrl, maxLines: 5, decoration: const InputDecoration(labelText: 'Letra da Canção', border: OutlineInputBorder())), const SizedBox(height: 12), TextField(controller: chordsCtrl, maxLines: 5, decoration: const InputDecoration(labelText: 'Cifras / Acordes (Opcional)', border: OutlineInputBorder(), hintText: 'G  C  D...')), const SizedBox(height: 24), SizedBox(width: double.infinity, height: 50, child: ElevatedButton(onPressed: () async { if (titleCtrl.text.isEmpty) return; await service.addMusic(Music(id: '', title: titleCtrl.text.trim(), composer: 'IEADAO Tsalala', lyrics: lyricsCtrl.text.trim(), chords: chordsCtrl.text.trim(), createdAt: DateTime.now())); if (context.mounted) Navigator.pop(context); }, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: const Text('ADICIONAR À LISTA', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)))), const SizedBox(height: 24)]))));
   }
 }
 
 class _FeatureCard extends StatelessWidget {
   final String label; final IconData icon; final Color color; final VoidCallback onTap;
   const _FeatureCard({required this.label, required this.icon, required this.color, required this.onTap});
-
   @override
-  Widget build(BuildContext context) => Material(color: Colors.white, borderRadius: BorderRadius.circular(24), elevation: 4, shadowColor: color.withOpacity(0.2), child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(24), child: Container(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [CircleAvatar(radius: 20, backgroundColor: color.withOpacity(0.15), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF1E293B)))]))));
+  Widget build(BuildContext context) => Material(color: Colors.white, borderRadius: BorderRadius.circular(24), elevation: 4, shadowColor: color.withValues(alpha: 0.2), child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(24), child: Container(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [CircleAvatar(radius: 20, backgroundColor: color.withValues(alpha: 0.15), child: Icon(icon, color: color, size: 20)), const SizedBox(height: 12), Text(label, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF1E293B)))]))));
 }
 
 class _IconBtn extends StatelessWidget {
   final String label; final IconData icon; final Color color; final VoidCallback onTap;
   const _IconBtn({required this.label, required this.icon, required this.color, required this.onTap});
-
   @override
-  Widget build(BuildContext context) => InkWell(onTap: onTap, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: color, size: 22), const SizedBox(height: 8), Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey))]));
+  Widget build(BuildContext context) => InkWell(onTap: onTap, child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: color, size: 22), const SizedBox(height: 6), Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey))]));
 }
 
 class _CompactTool extends StatelessWidget {
   final String label; final IconData icon; final Color color; final VoidCallback onTap;
   const _CompactTool({required this.label, required this.icon, required this.color, required this.onTap});
-
   @override
-  Widget build(BuildContext context) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.1))), child: ListTile(onTap: onTap, leading: Icon(icon, color: color, size: 20), title: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)), trailing: const Icon(Icons.chevron_right, size: 14)));
+  Widget build(BuildContext context) => Container(decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.1))), child: ListTile(onTap: onTap, leading: Icon(icon, color: color, size: 20), title: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)), trailing: const Icon(Icons.chevron_right, size: 14)));
 }

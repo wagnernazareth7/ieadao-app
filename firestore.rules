@@ -36,11 +36,61 @@ service cloud.firestore {
     }
 
     // ==========================================
-    // 📜 AUDITORIA (CORREÇÃO DO ERRO DE SALVAMENTO)
+    // 📸 MURAL DO CULTO (HIGHLIGHTS)
+    // ==========================================
+    match /highlights/{id} {
+      allow read: if isLogged();
+      allow write: if isAdmin() || hasRole('comunicacao');
+    }
+
+    // ==========================================
+    // 🙏 PEDIDOS DE ORAÇÃO (MODERAÇÃO)
+    // ==========================================
+    match /prayer_requests/{id} {
+      allow read, create: if isLogged();
+      // O autor, Admin ou Equipa de Comunicação podem editar/apagar
+      allow update, delete: if isLogged() && (
+        request.auth.uid == resource.data.userId || 
+        isAdmin() || 
+        hasRole('comunicacao')
+      );
+    }
+
+    // ==========================================
+    // 📢 AVISOS E COMUNICADOS
+    // ==========================================
+    match /notices/{noticeId} {
+      allow read: if isLogged();
+      allow write: if isAdmin() || hasRole('comunicacao');
+      match /replies/{replyId} {
+        allow read, create: if isLogged();
+        allow delete: if isAdmin() || hasRole('comunicacao') || (isLogged() && request.auth.uid == resource.data.userId);
+      }
+    }
+
+    // ==========================================
+    // 📺 TRANSMISSÃO AO VIVO
+    // ==========================================
+    match /live_stream/{id} {
+      allow read: if isLogged();
+      allow write: if isAdmin() || hasRole('comunicacao');
+    }
+
+    // ==========================================
+    // 🙏 SOLICITAÇÃO DE VISITAS
+    // ==========================================
+    match /visit_requests/{id} {
+      allow read: if isLogged() && (request.auth.uid == resource.data.userId || isLeader());
+      allow create: if isLogged();
+      allow update, delete: if isLeader();
+    }
+
+    // ==========================================
+    // 📜 AUDITORIA
     // ==========================================
     match /audit_logs/{logId} {
-      allow create: if isLogged(); // Permite registrar a ação
-      allow read, delete: if isAdmin(); // Apenas Admin audita
+      allow create: if isLogged(); 
+      allow read, delete: if isAdmin();
       allow update: if false;
     }
 
@@ -54,33 +104,12 @@ service cloud.firestore {
 
     match /ebd_attendance/{id} {
       allow read: if isLogged();
-      // Professores agora têm permissão total de escrita para a chamada
       allow write: if isLeader() || hasRole('professor');
     }
 
-    // ==========================================
-    // 🎤 COMANDO DE LITURGIA
-    // ==========================================
-    match /setlists/{id} {
-      allow read: if isLogged();
+    match /ebd_certificates/{id} {
+      allow read: if isLogged() && (request.auth.uid == resource.data.userId || isLeader());
       allow write: if isLeader();
-    }
-
-    match /order_of_service/{id} {
-      allow read: if isLogged();
-      allow write: if isLeader();
-    }
-
-    // ==========================================
-    // 💰 FINANCEIRO E CAIXA
-    // ==========================================
-    match /donations/{id} {
-      allow read: if isLogged() && (isAdmin() || hasRole('direcao') || hasRole('diretor'));
-      allow create: if isLogged();
-    }
-
-    match /expenses/{id} {
-      allow read, write: if isLogged() && (isAdmin() || hasRole('direcao') || hasRole('diretor'));
     }
 
     // ==========================================
@@ -99,34 +128,23 @@ service cloud.firestore {
     }
 
     // ==========================================
-    // 📓 OUTRAS REGRAS
+    // 📅 EVENTOS
     // ==========================================
-    match /notifications/{id} {
-      allow read, update: if isLogged() && request.auth.uid == resource.data.userId;
-      allow create: if isLogged();
-    }
-
-    match /notices/{noticeId} {
-      allow read: if isLogged();
-      allow write: if isAdmin() || hasRole('comunicacao');
-      match /replies/{replyId} {
-        allow read, create: if isLogged();
-        allow delete: if isAdmin() || (isLogged() && request.auth.uid == resource.data.userId);
-      }
-    }
-
     match /eventos/{id} {
       allow read: if isLogged();
       allow write: if isLeader() || hasRole('secretaria') || hasRole('comunicacao');
     }
 
+    // ================= =========================
+    // 📓 OUTRAS REGRAS
+    // ==========================================
     match /journal_entries/{id} {
       allow read, write: if isLogged() && request.auth.uid == (resource == null ? request.resource.data.userId : resource.data.userId);
     }
 
-    match /prayer_requests/{id} {
-      allow read, create, update: if isLogged();
-      allow delete: if isAdmin() || (isLogged() && resource.data.userId == request.auth.uid);
+    match /donations/{id} {
+      allow read: if isLogged() && (isAdmin() || hasRole('direcao') || hasRole('diretor'));
+      allow create: if isLogged();
     }
 
     match /{document=**} {

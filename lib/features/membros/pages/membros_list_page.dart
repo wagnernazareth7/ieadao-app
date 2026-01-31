@@ -47,6 +47,10 @@ class _MembrosListPageState extends ConsumerState<MembrosListPage> with SingleTi
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.secondary,
+          indicatorWeight: 3,
+          labelColor: Colors.white, // CORRIGIDO: Texto Ativo em Branco
+          unselectedLabelColor: Colors.white.withValues(alpha: 0.5), // CORRIGIDO: Texto Inativo em Branco Suave
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.2),
           tabs: const [
             Tab(text: 'ATIVOS'),
             Tab(text: 'INATIVOS'),
@@ -100,7 +104,6 @@ class _MembrosListPageState extends ConsumerState<MembrosListPage> with SingleTi
       itemBuilder: (context, index) {
         final member = list[index];
         
-        // LÓGICA DE IMAGEM SÉNIOR (Base64 ou URL)
         ImageProvider? profileImage;
         if (member.photoUrl != null && member.photoUrl!.startsWith('data:image')) {
           try {

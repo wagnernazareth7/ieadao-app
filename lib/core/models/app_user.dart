@@ -3,11 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AppUser {
   final String uid;
   final String email;
+  final String firstName;
+  final String lastName;
   final List<String> roles;
   final bool active;
   final String? phone;
   final String? address;
-  final String? photoUrl; // CAMPO PARA FOTO (Pode ser URL ou Base64)
+  final String? photoUrl;
   final String? birthDate;
   final String? gender;
   final DateTime? createdAt;
@@ -22,6 +24,8 @@ class AppUser {
   AppUser({
     required this.uid,
     required this.email,
+    required this.firstName,
+    required this.lastName,
     required this.roles,
     required this.active,
     this.phone,
@@ -37,6 +41,7 @@ class AppUser {
     this.spiritualChildrenIds = const [],
   });
 
+  // ✅ RESTAURADO: Extrai o ID do cargo principal para compatibilidade com os providers
   String get roleId => roles.isNotEmpty ? roles.first : 'membro';
 
   factory AppUser.fromMap(String uid, Map<String, dynamic> map) {
@@ -52,11 +57,13 @@ class AppUser {
     return AppUser(
       uid: uid,
       email: map['email'] ?? '',
+      firstName: map['firstName'] ?? '',
+      lastName: map['lastName'] ?? '',
       roles: rolesList,
       active: map['active'] ?? true,
       phone: map['phone'],
       address: map['address'],
-      photoUrl: map['photoUrl'], // MAPEAMENTO DA FOTO
+      photoUrl: map['photoUrl'],
       birthDate: map['birthDate'],
       gender: map['gender'],
       isBaptized: map['isBaptized'] ?? false,
@@ -71,6 +78,8 @@ class AppUser {
   Map<String, dynamic> toMap() {
     return {
       'email': email,
+      'firstName': firstName,
+      'lastName': lastName,
       'roles': roles,
       'role': roles.isNotEmpty ? roles.first : 'membro',
       'active': active,

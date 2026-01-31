@@ -3,43 +3,59 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/providers/current_user_provider.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/dashboard/dashboard_router.dart';
+import '../theme/app_colors.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1️⃣ Observa o provedor que carrega o utilizador + dados do Firestore
     final currentUserAsync = ref.watch(currentUserProvider);
 
     return currentUserAsync.when(
-      // Enquanto carrega os dados do Firestore, mostra um loader
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      // Se houver erro (ex: falta de internet ou erro nas regras do Firestore)
-      error: (err, _) => Scaffold(
+      loading: () => Scaffold(
+        backgroundColor: Colors.white,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Erro de autenticação: $err', textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.refresh(currentUserProvider),
-                child: const Text('Tentar novamente'),
+              // 🛡️ CAMINHO PADRONIZADO (Renomeie o arquivo para logo_igreja.png)
+              Image.asset(
+                'assets/images/logo_igreja.png',
+                width: 240,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 40),
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                strokeWidth: 3,
               ),
             ],
           ),
         ),
       ),
+      
+      error: (err, _) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.wifi_off_rounded, size: 60, color: Colors.redAccent),
+              const SizedBox(height: 16),
+              Text('Erro de conexão: $err', textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => ref.refresh(currentUserProvider),
+                child: const Text('TENTAR NOVAMENTE'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      
       data: (user) {
-        // Se o utilizador não estiver logado ou o documento no Firestore não existir
-        if (user == null) {
-          return const LoginPage();
-        }
-
-        // CORREÇÃO SÉNIOR: Passando a lista de cargos (roles) para o DashboardRouter
+        if (user == null) return const LoginPage();
         return DashboardRouter(roles: user.roles);
       },
     );

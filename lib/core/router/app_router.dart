@@ -14,8 +14,9 @@ import 'package:ieadao/features/evento/evento_form_page.dart';
 import 'package:ieadao/features/ebd/pages/ebd_admin_dashboard_page.dart';
 import 'package:ieadao/features/ebd/pages/ebd_class_detail_page.dart';
 import 'package:ieadao/features/ebd/pages/ebd_class_list_page.dart';
-import 'package:ieadao/features/ebd/pages/ebd_attendance_page.dart'; // NOVO IMPORT
+import 'package:ieadao/features/ebd/pages/ebd_attendance_page.dart';
 import 'package:ieadao/features/ebd/pages/ebd_form_page.dart';
+import 'package:ieadao/features/ebd/pages/ebd_certificates_page.dart';
 import 'package:ieadao/features/escalas/pages/escala_admin_page.dart';
 import 'package:ieadao/features/louvor/pages/setlist_editor_page.dart';
 import 'package:ieadao/features/chat/chat_page.dart';
@@ -31,6 +32,9 @@ import 'package:ieadao/features/admin/audit_logs_page.dart';
 import 'package:ieadao/features/reports/reports_dashboard_page.dart';
 import 'package:ieadao/features/inventory/pages/inventory_page.dart';
 import 'package:ieadao/features/membros/pages/spiritual_family_admin_page.dart';
+import 'package:ieadao/features/visits/pages/visit_request_page.dart';
+import 'package:ieadao/features/highlights/pages/mural_page.dart'; // NOVO IMPORT
+import 'package:ieadao/features/highlights/pages/mural_form_page.dart'; // NOVO IMPORT
 import 'package:ieadao/core/models/music_model.dart';
 
 final GoRouter router = GoRouter(
@@ -40,7 +44,9 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/register', builder: (context, state) => const RegisterPage()),
 
     // --- COMUNIDADE ---
+    GoRoute(path: '/mural', builder: (context, state) => const MuralPage()), // ROTA ADICIONADA
     GoRoute(path: '/ebd', builder: (context, state) => const EbdClassListPage()),
+    GoRoute(path: '/ebd/certificados', builder: (context, state) => const EbdCertificatesPage()),
     GoRoute(path: '/oracao', builder: (context, state) => const PrayerPage()),
     GoRoute(path: '/prayer', builder: (context, state) => const PrayerPage()),
     GoRoute(path: '/diario', builder: (context, state) => const JournalPage()),
@@ -50,8 +56,10 @@ final GoRouter router = GoRouter(
     GoRoute(path: '/comunicados', builder: (context, state) => const NoticesPage()),
     GoRoute(path: '/donations', builder: (context, state) => const DonationPage()),
     GoRoute(path: '/biblioteca', builder: (context, state) => const LibraryPage()),
+    GoRoute(path: '/solicitar-visita', builder: (context, state) => const VisitRequestPage()),
 
     // --- GESTÃO E ADMIN ---
+    GoRoute(path: '/mural/novo', builder: (context, state) => const MuralFormPage()), // ROTA ADICIONADA
     GoRoute(path: '/comunicados-admin', builder: (context, state) => const NoticesPage()),
     GoRoute(path: '/membros', builder: (context, state) => const MembrosListPage()),
     GoRoute(path: '/membros/novo', builder: (context, state) => const MembroFormPage()),
@@ -76,7 +84,6 @@ final GoRouter router = GoRouter(
       path: '/ebd/classes/:id', 
       builder: (context, state) => EbdClassDetailPage(classId: state.pathParameters['id']!),
     ),
-    // ROTA DA CHAMADA (CORREÇÃO DA IMAGEM)
     GoRoute(
       path: '/ebd/classes/:id/attendance', 
       builder: (context, state) => EbdAttendancePage(classId: state.pathParameters['id']!),
